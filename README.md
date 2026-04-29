@@ -83,6 +83,8 @@ The right two columns are what energy instrumentation adds. They surface three t
 
 All 5 trained for the full 600 s wallclock cap on 8×H100 SXM5 (700 W TDP per GPU). Reproduced `val_bpb` matches each submission's published number within ±0.0011 BPB.
 
+> **Wh/Mtok** = energy (Wh) per million training tokens processed (`total_energy_Wh ÷ (steps × tokens_per_step) × 1e6`). Normalizes energy across configs with different model sizes and batch sizes — answers *"how expensive is one token through this architecture?"* Bigger architectures cost more energy per token (more FLOPs per token) but also extract more loss-reduction per token; the slope is a useful diagnostic.
+
 ---
 
 ## Five findings
@@ -226,11 +228,21 @@ Specific env-var overrides per submission are quoted in [`notebook/report.ipynb`
 
 ---
 
-## What's next
+## Submission contents
 
-- **Add SP8192 SOTA** when the dataset becomes accessible from a public mirror, or via local raw-FineWeb regeneration through `prepare_caseops_data.py` from the SOTA submission folder. That would extend the curve from `1.10 → 1.06` and triple the loss-axis dynamic range.
-- **Multi-seed runs** for tighter error bars on energy (3 seeds × ~$5/run ≈ $75 for full re-validation).
-- **Open an issue on `openai/parameter-golf`** proposing energy as an optional tracked metric.
+When this study is mirrored into `records/track_non_record_16mb/2026-04-29_Energy_Instrumentation_5Configs/` (see [`PR_INSTRUCTIONS.md`](PR_INSTRUCTIONS.md)), the directory contains:
+
+- `README.md` — this writeup
+- `submission.json` — non-record metadata (configs measured, energy/loss ranges, hardware, instrumentation tool)
+- `data/matcha/lb_*.jsonl` — raw matcha JSONL records (5 files: per-step + session_end energy, power, train_metrics)
+- `data/pg_logs/lb_*.txt` — each submission's own training log (5 files: includes `final_int8_zlib_roundtrip val_bpb:...` and post-quant detail)
+- `data/hardware.txt` — `nvidia-smi -L`, matcha version, per-GPU TDP
+- `notebook/report.ipynb` — Jupyter notebook used for chart iteration
+- `scripts/analyze.py` — prints the merged comparison table from raw data
+- `scripts/plot.py` — regenerates all 5 figures from raw data
+- `figures/*.png` — 5 PNGs: hero scatter, loss trajectory, energy efficiency, train vs post-train, per-GPU deviation
+
+Total artifact size: ~1.5 MB. No model weights — this is methodology + measurements only.
 
 ---
 
